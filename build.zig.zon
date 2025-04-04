@@ -1,0 +1,20 @@
+.{
+    .name = .game,
+    .version = "0.0.0",
+
+    .dependencies = .{
+        .sdl3 = .{
+            .url = "git+https://github.com/Gota7/zig-sdl3.git#04bbb10991440239db14e45fbe4e363adb1c0879",
+            .hash = "sdl3-0.0.1-NmT1QwlhEAAMUoLghlCi7bmhFnuXAw7-fwo76lshcrK-",
+        },
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+
+    .minimum_zig_version = "0.14.0",
+    .fingerprint = 0x232b318cf3d394a6,
+}
