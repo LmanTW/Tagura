@@ -41,6 +41,7 @@ pub const Layout = enum(u4) {
 
 // The behavior of overflow of the container.
 pub const Overflow = enum(u4) {
+    Show,
     Hidden,
     Scroll
 };

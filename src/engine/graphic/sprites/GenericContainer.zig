@@ -1,19 +1,26 @@
 const std = @import("std");
 
+const Sprite = @import("../Sprite.zig");
 const Layout = @import("../Layout.zig");
 
 const GenericContainer = @This();
 
 allocator: std.mem.Allocator,
-children: std.ArrayList(Anonymous),
+children: std.ArrayList(Sprite),
 
-x: ?i32,
-y: ?i32,
+x: i32,
+y: i32,
 width: ?u32,
 height: ?u32,
 
+// The style of the container.
+pub const Style = struct {
+    anchor: Layout.Alignment = .TopLeft,
+    origin: Layout.Alignment = .TopLeft
+};
+
 // The vtable.
-pub const VTable = Anonymous.VTable{
+pub const VTable = Sprite.VTable{
     .getPosition = getPosition,
     .getSize = getSize,
 
@@ -24,7 +31,7 @@ pub const VTable = Anonymous.VTable{
 };
 
 // Create a generic container template.
-pub fn new(x: ?i32, y: ?i32, width: ?u32, height: ?u32) Template {
+pub fn new(x: i32, y: i32, width: ?u32, height: ?u32) Template {
      return Template{
          .x = x,
          .y = y,
@@ -35,8 +42,8 @@ pub fn new(x: ?i32, y: ?i32, width: ?u32, height: ?u32) Template {
 
 // Template for the generic container.
 pub const Template = struct {
-    x: ?i32,
-    y: ?i32,
+    x: i32,
+    y: i32,
     width: ?u32,
     height: ?u32,
 
@@ -44,7 +51,7 @@ pub const Template = struct {
     pub fn init(template: Template, allocator: std.mem.Allocator) GenericContainer {
         return GenericContainer{
             .allocator = allocator,
-            .children = std.ArrayList(Anonymous).init(allocator),
+            .children = std.ArrayList(Sprite).init(allocator),
 
             .x = template.x,
             .y = template.y,
@@ -80,7 +87,7 @@ pub fn add(self: *GenericContainer, template: anytype) !*ResolveSpriteType(@Type
         return error.ReachedMaxCapacity;
     }
 
-    var anonymous = try Anonymous.init(template.init(self.allocator), self.allocator);
+    var anonymous = try Sprite.init(template.init(self.allocator), self.allocator);
     errdefer anonymous.deinit();
 
     try self.children.append(anonymous);
@@ -101,130 +108,37 @@ pub fn remove(self: *GenericContainer, index: u16) void {
 }
 
 // Get the position of the generic container.
-pub fn getPosition(ptr: *anyopaque) Layout.PositionQuery {
+pub fn getPosition(ptr: *anyopaque) Sprite.Position {
     const self = @as(*GenericContainer, @ptrCast(@alignCast(ptr)));
 
-    return Layout.PositionQuery{
+    return Sprite.Position{
         .x = self.x,
         .y = self.y
     };
 }
 
 // Get the size of the generic container.
-pub fn getSize(ptr: *anyopaque) Layout.SizeQuery {
+pub fn getSize(ptr: *anyopaque) Sprite.Size {
     const self = @as(*GenericContainer, @ptrCast(@alignCast(ptr)));
 
-    return Layout.SizeQuery{
+    return Sprite.Size{
         .width = self.width,
         .height = self.height
     };
 }
 
 // Set the position of the generic container.
-pub fn setPosition(ptr: *anyopaque, position: Layout.PositionQuery) void {
+pub fn setPosition(ptr: *anyopaque, x: i32, y: i32) void {
     const self = @as(*GenericContainer, @ptrCast(@alignCast(ptr)));
 
-    self.x = position.x;
-    self.y = position.y;
+    self.x = x;
+    self.y = y;
 }
 
 // Set the size of the generic container.
-pub fn setSize(ptr: *anyopaque, size: Layout.SizeQuery) void {
+pub fn setSize(ptr: *anyopaque, width: ?u32, height: ?u32) void {
     const self = @as(*GenericContainer, @ptrCast(@alignCast(ptr)));
 
-    self.width = size.width;
-    self.height = size.height;
+    self.width = width;
+    self.height = height;
 }
-
-// Anonymous sprite.
-pub const Anonymous = struct {
-    allocator: std.mem.Allocator,
-    size: usize,
-    alignment: usize,
-
-    ptr: *anyopaque,
-    vtable: *const Anonymous.VTable,
-
-    // The vtable.
-    pub const VTable = struct {
-        getPosition: *const fn (ptr: *anyopaque) Layout.PositionQuery,
-        getSize: *const fn (ptr: *anyopaque) Layout.SizeQuery,
-
-        setPosition: ?*const fn (ptr: *anyopaque, position: Layout.PositionQuery) void = null,
-        setSize: ?*const fn (ptr: *anyopaque, size: Layout.SizeQuery) void = null,
-
-        render: ?*const fn (ptr: *anyopaque, parent: Layout.Parent) void = null,
-        update: ?*const fn (ptr: *anyopaque) void = null,
-
-        deinit: ?*const fn (ptr: *anyopaque) void = null
-    };
-
-    // Initialize an anonymous sprite.
-    pub fn init(sprite: anytype, allocator: std.mem.Allocator) !Anonymous {
-        if (!@hasField(@TypeOf(sprite), "VTable")) {
-            return error.SpriteMissingVTable;
-        }
-
-        const size = @sizeOf(@TypeOf(sprite));
-        const alignment = @alignOf(@TypeOf(sprite));
-
-        const ptr = @as(*@TypeOf(sprite), @ptrCast(@constCast(&(allocator.rawAlloc(size, .fromByteUnits(alignment), @returnAddress()) orelse return error.OutOfMemory))));
-        ptr.* = sprite;
-
-        return Anonymous{
-            .allocator = allocator,
-            .size = size,
-            .alignment = alignment,
-
-            .ptr = ptr,
-            .vtable = &@TypeOf(sprite).VTable
-        };
-    }
-
-    // Deinitialize the anonymous sprite.
-    pub fn deinit(self: *Anonymous) void {
-        if (self.vtable.deinit) |hook| {
-            hook(self.ptr);
-        }
-
-        self.allocator.rawFree(@as(*[]u8, @ptrCast(@alignCast(self.ptr))).*, .fromByteUnits(self.alignment), @returnAddress());
-    }
-
-    // Get the position of the anonymous sprite.
-    pub fn getPosition(self: *Anonymous) Layout.PositionQuery {
-        return self.vtable.getPosition(self.ptr);
-    }
-
-    // Get the size of the anonymous sprite.
-    pub fn getSize(self: *Anonymous) Layout.SizeQuery {
-        return self.vtable.getSize(self.ptr);
-    }
-
-    // Set the position of the anonymous sprite.
-    pub fn setPosition(self: *Anonymous, position: Layout.PositionQuery) void {
-        if (self.vtable.setPosition) |hook| {
-            hook(self.ptr, position);
-        }
-    }
-
-    // Set the size of the anonymous sprite.
-    pub fn setSize(self: *Anonymous, size: Layout.SizeQuery) void {
-        if (self.vtable.setSize) |hook| {
-            hook(self.ptr, size);
-        }
-    }
-
-    // Render the anonymous sprite.
-    pub fn render(self: *Anonymous, parent: Layout.Parent) void {
-        if (self.vtable.render) |hook| {
-            hook(self.ptr, parent);
-        }
-    }
-
-    // Update the anonymous sprite.
-    pub fn update(self: *Anonymous) void {
-        if (self.vtable.update) |hook| {
-            hook(self.ptr);
-        }
-    }
-};

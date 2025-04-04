@@ -40,7 +40,7 @@ pub fn build(b: *std.Build) !void {
             .target = b.resolveTargetQuery(release_target),
             .optimize = .ReleaseSafe,
 
-            .strip = false
+            .strip = true
         });
 
         addDependencies(b, release_exe.root_module);
