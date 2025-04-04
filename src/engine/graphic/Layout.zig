@@ -22,16 +22,11 @@ pub fn init(kind: Kind, width: u32, height: u32, style: Style) Layout {
 }
 
 // Calculate the position.
-pub fn calculatePosition(parent: Sprite.Dimension, _: Sprite.Position, anchor: Alignment, _: Alignment) Sprite.Position {
-    var result_x = @as(i32, undefined);
-    var result_y = @as(i32, undefined);
+pub fn calculatePosition(parent: Sprite.Dimension, dimension: Sprite.Dimension, anchor: Alignment, origin: Alignment) Sprite.Position {
+    var result_x = @as(i32, 0);
+    var result_y = @as(i32, 0);
 
     switch (anchor) {
-        .TopLeft => {
-            result_x = 0;
-            result_y = 0;
-        },
-
         .TopCenter => {
             result_x = @divFloor(parent.width, 2);
             result_y = 0;
@@ -55,6 +50,61 @@ pub fn calculatePosition(parent: Sprite.Dimension, _: Sprite.Position, anchor: A
         .Right => {
             result_x = parent.width;
             result_y = @divFloor(parent.height, 2);
+        },
+
+        .BottomLeft => {
+            result_x = 0;
+            result_y = parent.height;
+        },
+
+        .BottomCenter => {
+            result_x = @divFloor(parent.width, 2);
+            result_y = parent.height;
+        },
+
+        .BottomRight => {
+            result_x = parent.width;
+            result_y = parent.height;
+        },
+
+        else => {}
+    }
+
+    switch (origin) {
+        .TopCenter => {
+            result_x -= @divFloor(dimension.width, 2);
+        },
+
+        .TopRight => {
+            result_x -= dimension.width;
+        },
+
+        .Left => {
+            result_y -= @divFloor(dimension.height, 2);
+        },
+
+        .Center => {
+            result_x -= @divFloor(dimension.width, 2);
+            result_y -= @divFloor(dimension.height, 2);
+        },
+
+        .Right => {
+            result_x -= dimension.width;
+            result_y -= @divFloor(dimension.height, 2);
+        },
+
+        .BottomLeft => {
+            result_y -= dimension.height;
+        },
+
+        .BottomCenter => {
+            result_x -= @divFloor(dimension.width, 2);
+            result_y -= dimension.height;
+        },
+
+        .BottomRight => {
+            result_x -= dimension.width;
+            result_y -= dimension.height;
         },
 
         else => {}
