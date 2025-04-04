@@ -12,6 +12,7 @@ x: i32,
 y: i32,
 width: ?u32,
 height: ?u32,
+style: Style,
 
 // The style of the container.
 pub const Style = struct {
@@ -31,12 +32,13 @@ pub const VTable = Sprite.VTable{
 };
 
 // Create a generic container template.
-pub fn new(x: i32, y: i32, width: ?u32, height: ?u32) Template {
+pub fn new(x: i32, y: i32, width: ?u32, height: ?u32, style: Style) Template {
      return Template{
          .x = x,
          .y = y,
          .width = width,
-         .height = height
+         .height = height,
+         .style = style
      };
 }
 
@@ -46,6 +48,7 @@ pub const Template = struct {
     y: i32,
     width: ?u32,
     height: ?u32,
+    style: Style,
 
     // Initialize a generic container.
     pub fn init(template: Template, allocator: std.mem.Allocator) GenericContainer {
@@ -57,11 +60,12 @@ pub const Template = struct {
             .y = template.y,
             .width = template.width,
             .height = template.height,
+            .style = template.style
         };
     }
 };
 
-// Deinitialize the generic container.
+// Deinitialize the container.
 pub fn deinit(ptr: *anyopaque) void {
     const self = @as(*GenericContainer, @ptrCast(@alignCast(ptr)));
 
@@ -107,7 +111,16 @@ pub fn remove(self: *GenericContainer, index: u16) void {
     }
 }
 
-// Get the position of the generic container.
+// Remove all the children sprite in the container.
+pub fn clean(self: *GenericContainer) void {
+    for (self.children.items) |*child| {
+        child.deinit();
+    }
+
+    self.children.clearAndFree();
+}
+
+// Get the position of the container.
 pub fn getPosition(ptr: *anyopaque) Sprite.Position {
     const self = @as(*GenericContainer, @ptrCast(@alignCast(ptr)));
 
@@ -117,7 +130,7 @@ pub fn getPosition(ptr: *anyopaque) Sprite.Position {
     };
 }
 
-// Get the size of the generic container.
+// Get the size of the container.
 pub fn getSize(ptr: *anyopaque) Sprite.Size {
     const self = @as(*GenericContainer, @ptrCast(@alignCast(ptr)));
 
@@ -127,7 +140,7 @@ pub fn getSize(ptr: *anyopaque) Sprite.Size {
     };
 }
 
-// Set the position of the generic container.
+// Set the position of the container.
 pub fn setPosition(ptr: *anyopaque, x: i32, y: i32) void {
     const self = @as(*GenericContainer, @ptrCast(@alignCast(ptr)));
 
@@ -135,7 +148,7 @@ pub fn setPosition(ptr: *anyopaque, x: i32, y: i32) void {
     self.y = y;
 }
 
-// Set the size of the generic container.
+// Set the size of the container.
 pub fn setSize(ptr: *anyopaque, width: ?u32, height: ?u32) void {
     const self = @as(*GenericContainer, @ptrCast(@alignCast(ptr)));
 

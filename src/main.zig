@@ -24,7 +24,7 @@ pub fn main() !void {
     // Yes sir, your allocator.
     const allocator = debug.allocator();
 
-    var container = GenericContainer.new(0, 0, 1280, 720).init(allocator);
+    var container = GenericContainer.new(0, 0, 1280, 720, .{}).init(allocator);
     defer GenericContainer.deinit(&container);
     
     try sdl.init.init(init_flags);
