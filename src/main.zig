@@ -26,9 +26,6 @@ pub fn main() !void {
 
     var container = GenericContainer.new(0, 0, 1280, 720).init(allocator);
     defer GenericContainer.deinit(&container);
-
-    var child = container.add(GenericContainer.new(0, 0, 1280, 1280));
-    defer GenericContainer.deinit(&child);
     
     try sdl.init.init(init_flags);
     defer sdl.init.quit(init_flags);

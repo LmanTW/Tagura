@@ -12,7 +12,8 @@ y: ?i32,
 width: ?u32,
 height: ?u32,
 
-VTable: Anonymous.VTable = .{
+// The vtable.
+pub const VTable = Anonymous.VTable{
     .getPosition = getPosition,
     .getSize = getSize,
 
@@ -20,7 +21,7 @@ VTable: Anonymous.VTable = .{
     .setSize = setSize,
 
     .deinit = deinit
-},
+};
 
 // Create a generic container template.
 pub fn new(x: ?i32, y: ?i32, width: ?u32, height: ?u32) Template {
@@ -142,7 +143,7 @@ pub const Anonymous = struct {
     alignment: usize,
 
     ptr: *anyopaque,
-    vtable: *const VTable,
+    vtable: *const Anonymous.VTable,
 
     // The vtable.
     pub const VTable = struct {
@@ -160,6 +161,10 @@ pub const Anonymous = struct {
 
     // Initialize an anonymous sprite.
     pub fn init(sprite: anytype, allocator: std.mem.Allocator) !Anonymous {
+        if (!@hasField(@TypeOf(sprite), "VTable")) {
+            return error.SpriteMissingVTable;
+        }
+
         const size = @sizeOf(@TypeOf(sprite));
         const alignment = @alignOf(@TypeOf(sprite));
 
@@ -172,7 +177,7 @@ pub const Anonymous = struct {
             .alignment = alignment,
 
             .ptr = ptr,
-            .vtable = &sprite.VTable
+            .vtable = &@TypeOf(sprite).VTable
         };
     }
 
