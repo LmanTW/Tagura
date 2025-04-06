@@ -13,7 +13,7 @@ const release_targets: []const std.Target.Query = &.{
 
 // Build the project.
 pub fn build(b: *std.Build) !void {
-    b.sysroot = b.path("./sdk/macos13").getPath(b);
+    b.sysroot = b.path("./system/macos/sdk").getPath(b);
 
     const test_exe = b.addExecutable(.{
         .name = "tagura",
