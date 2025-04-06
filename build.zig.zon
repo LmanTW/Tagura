@@ -1,0 +1,20 @@
+.{
+    .name = .tagura,
+    .version = "0.0.0",
+
+    .dependencies = .{
+        .sdl3 = .{
+            .url = "git+https://github.com/Gota7/zig-sdl3.git#688ab8f77cc077fcb004a1bcb50d97cadad38fb0",
+            .hash = "sdl3-0.0.1-NmT1Q4jBEADccYnnIzRsaPxwQvttqssVrSaVubyEDrY3",
+        },
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+
+    .minimum_zig_version = "0.14.0",
+    .fingerprint = 0x56549f32eb67e936,
+}
