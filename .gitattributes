@@ -1,5 +1,5 @@
 * text=auto
 
-system/macos/sdk* binary
-system/macos/sdk* linguist-vendored
+system/macos/sdk/* binary
+system/macos/sdk/* linguist-vendored
 

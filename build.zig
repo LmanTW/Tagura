@@ -83,8 +83,8 @@ pub fn addDependencies(b: *std.Build, module: *std.Build.Module) void {
 
     switch (target.result.os.tag) {
         .macos => {
-            module.addSystemIncludePath(b.path("./sdk//macos13/usr/include"));
-            module.addSystemFrameworkPath(b.path("./sdk/macos13/System/Library/Frameworks"));
+            module.addSystemIncludePath(b.path("./system/macos/sdk/usr/include"));
+            module.addSystemFrameworkPath(b.path("./system/macos/sdk/System/Library/Frameworks"));
         },
 
         else => {}
