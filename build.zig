@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const release_targets: []const std.Target.Query = &.{
+const release_targets = @as([]const std.Target.Query, &.{
     .{ .cpu_arch = .x86_64, .os_tag = .linux, .abi = .gnu },
     .{ .cpu_arch = .aarch64, .os_tag = .linux, .abi = .gnu },
 
@@ -9,7 +9,7 @@ const release_targets: []const std.Target.Query = &.{
 
     .{ .cpu_arch = .x86_64, .os_tag = .windows },
     .{ .cpu_arch = .aarch64, .os_tag = .windows }
-};
+});
 
 // Build the project.
 pub fn build(b: *std.Build) !void {

@@ -9,12 +9,12 @@ on:
         default: "0.0.0"
 
 jobs:
-  release:
-    name: "Create a new Release"
+  build:
+    name: "Build Tagura"
     runs-on: "ubuntu-latest"
 
     steps:
-      - name: "Checkout the Repository"
+      - name: "Checkout Repository"
         uses: "actions/checkout@v4"
 
       - name: "Setup Zig"
@@ -24,3 +24,30 @@ jobs:
 
       - name: "Build Tagura"
         run: "zig build"
+      
+      - name: "Upload Artifacts"
+        uses: 'ctions/upload-artifact@v4'
+        with:
+          path: |
+            "zig-out/tagura-linux-amd64"
+            "zig-out/tagura-linux-arm64"
+            "zig-out/tagura-macos-amd64"
+            "zig-out/tagura-macos-arm64"
+            "zig-out/tagura-windows-amd64.exe"
+            "zig-out/tagura-windows-arm64.exe"
+
+  package:
+    name: "Create Release"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Create Release"
+        uses: "actions/create-release@latest"
+        with:
+          prerelease: false
+          draft: false
+        
+          tag_name: "v${{ github.event.inputs.version }}"
+          release_name: "v${{ github.event.inputs.version }}"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
