@@ -28,11 +28,11 @@ jobs:
           path: ".zig-cache"
           key: "zig-cache"
 
-      - name: "Path?"
-        run: "pwd && ls"
-
       - name: "Build the Project"
         run: "zig build"
+
+      - name: "Directory"
+        run: "ls"
 
       - name: "Update Zig Cache"
         uses: "actions/cache/save@v4"
