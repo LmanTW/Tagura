@@ -14,10 +14,10 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-      - name: "Checkout Repository"
+      - name: "Checkout the Repository"
         uses: "actions/checkout@v4"
 
-      - name: "Setup Zig"
+      - name: "Set up Zig"
         uses: "mlugg/setup-zig@v1"
         with:
           version: "0.14.0"
@@ -28,7 +28,10 @@ jobs:
           path: ".zig-cache"
           key: "zig-cache"
 
-      - name: "Build Tagura"
+      - name: "Path?"
+        run: "pwd && ls"
+
+      - name: "Build the Project"
         run: "zig build"
 
       - name: "Update Zig Cache"
@@ -37,7 +40,7 @@ jobs:
           path: ".zig-cache"
           key: "zig-cache"
       
-      - name: "Upload Artifacts"
+      - name: "Upload the Artifacts"
         uses: 'actions/upload-artifact@v4'
         with:
           path: |
