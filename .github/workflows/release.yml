@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        description: 'Version'
+        default: '0.0.0'
+
+jobs:
+  release:
+    name: Create a new Release
+    runs-on: ubuntu-latest
+
+     steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v1
+        with:
+          version: 0.14.0
+
+      - name: Build Tagura
+        run: zig build
