@@ -32,7 +32,7 @@ jobs:
         run: "zig build"
 
       - name: "Directory"
-        run: "ls"
+        run: "ls zig-out"
 
       - name: "Update Zig Cache"
         uses: "actions/cache/save@v4"
