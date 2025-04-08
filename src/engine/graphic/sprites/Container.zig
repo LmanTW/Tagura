@@ -8,10 +8,10 @@ const Container = @This();
 allocator: std.mem.Allocator,
 children: std.ArrayList(Sprite),
 
-x: Layout.Position,
-y: Layout.Position,
-width: Layout.Size,
-height: Layout.Size,
+x: Layout.Coordinate,
+y: Layout.Coordinate,
+width: Layout.Measurement,
+height: Layout.Measurement,
 
 style: Style,
 
@@ -27,22 +27,18 @@ pub const VTable = Sprite.VTable{
 };
 
 // Create a container template.
-pub fn new(x: Layout.Position, y: Layout.Position, width: Layout.Size, height: Layout.Size, style: Style) Template {
+pub fn new(position: Layout.Position, size: Layout.Size, style: Style) Template {
     return Template{
-        .x = x,
-        .y = y,
-        .width = width,
-        .height = height,
+        .position = position,
+        .size = size,
         .style = style
     };
 }
 
 // The container template.
 pub const Template = struct {
-    x: Layout.Position,
-    y: Layout.Position,
-    width: Layout.Size,
-    height: Layout.Size,
+    position: Layout.Position,
+    size: Layout.Size,
     style: Style,
 
     // Initialize a container from the template.
@@ -57,10 +53,10 @@ pub fn init(template: Template, allocator: std.mem.Allocator) Container {
         .allocator = allocator,
         .children = std.ArrayList(Sprite).init(allocator),
 
-        .x = template.x,
-        .y = template.y,
-        .width = template.width,
-        .height = template.height,
+        .x = template.position.x,
+        .y = template.position.y,
+        .width = template.size.width,
+        .height = template.size.height,
         .style = template.style
     };
 }

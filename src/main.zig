@@ -2,6 +2,7 @@ const std = @import("std");
 const sdl = @import("sdl");
 
 const Container = @import("./engine/graphic/sprites/Container.zig");
+const Layout = @import("./engine/graphic/Layout.zig");
 
 const init_flags = sdl.init.Flags{
     .video = true,
@@ -26,11 +27,10 @@ pub fn main() !void {
     const window = try sdl.video.Window.init("Tagura", 1280, 720, window_flags);
     defer window.deinit();
 
-    var container = Container.new(.relative(0), .relative(0), .fixed(256), .fixed(256), .{}).init(allocator);
+    var container = Container.new(Layout.Position.init(.relative(0), .relative(0)), Layout.Size.init(.fixed(256), .fixed(256)), .{}).init(allocator);
     defer Container.deinit(&container);
 
-    _ = try container.add(Container.new(.relative(0), .relative(0), .fixed(64), .fixed(64), .{}));
-    _ = try container.add(Container.new(.relative(0), .relative(0), .fixed(64), .fixed(64), .{}));
+    _ = try container.add(Container.new(Layout.Position.init(.relative(0), .relative(0)), Layout.Size.init(.fixed(64), .fixed(64)), .{}));
 
     main: while (true) {
         const timestamp = sdl.timer.getMillisecondsSinceInit();
