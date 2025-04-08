@@ -33,7 +33,7 @@ jobs:
 
       - name: "Update Zig Cache"
         uses: "actions/cache/save@v4"
-        width:
+        with:
           path: ".zig-cache"
           key: "zig-cache"
       
