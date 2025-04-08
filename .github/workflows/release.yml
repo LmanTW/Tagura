@@ -43,13 +43,7 @@ jobs:
       - name: "Upload the Artifacts"
         uses: 'actions/upload-artifact@v4'
         with:
-          path: |
-            "zig-out/tagura-linux-amd64"
-            "zig-out/tagura-linux-arm64"
-            "zig-out/tagura-macos-amd64"
-            "zig-out/tagura-macos-arm64"
-            "zig-out/tagura-windows-amd64.exe"
-            "zig-out/tagura-windows-arm64.exe"
+          path: "zig-out"
 
   release:
     permissions: "write-all"
