@@ -1,4 +1,4 @@
-name: "Release"
+name: "Create Release"
 
 on:
   workflow_dispatch:
@@ -36,7 +36,10 @@ jobs:
             "zig-out/tagura-windows-amd64.exe"
             "zig-out/tagura-windows-arm64.exe"
 
-  package:
+  release:
+    permissions: "write-all"
+    needs: "build"
+
     name: "Create Release"
     runs-on: "ubuntu-latest"
 
