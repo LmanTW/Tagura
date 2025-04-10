@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const Layout = @import("./Layout.zig");
+
 const Sprite = @This();
 
 allocator: std.mem.Allocator,
@@ -11,6 +13,12 @@ vtable: *const VTable,
 
 // The vtable.
 pub const VTable = struct {
+    getPosition: *const fn(ptr: *anyopaque) Layout.Position,
+    getSize: *const fn(ptr: *anyopaque) Layout.Size,
+
+    render: ?*const fn(ptr: *anyopaque, global: Layout.Dimension, parent: Layout.Dimension) void = null,
+    update: ?*const fn(ptr: *anyopaque) void = null,
+
     deinit: ?*const fn(ptr: *anyopaque) void = null
 };
 
@@ -39,4 +47,14 @@ pub fn deinit(self: *Sprite) void {
     } 
 
     self.allocator.rawFree(@as([*]u8, @ptrCast(self.ptr))[0..self.size], .fromByteUnits(self.alignment), @returnAddress());
+}
+
+// Get the position of the sprite.
+pub fn getPosition(self: *Sprite) Layout.Position {
+    return self.vtable.getPosition(self.ptr);
+}
+
+// Get the size of the sprite.
+pub fn getSize(self: *Sprite) Layout.Size {
+    return self.vtable.getSize(self.ptr);
 }

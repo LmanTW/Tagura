@@ -13,16 +13,26 @@ y: Layout.Coordinate,
 width: Layout.Measurement,
 height: Layout.Measurement,
 
+layout: Layout,
 style: Style,
 
 // The style of the container.
 pub const Style = struct {
     anchor: Layout.Alignment = .TopLeft,
-    origin: Layout.Alignment = .TopLeft
+    origin: Layout.Alignment = .TopLeft,
+
+    layout: Layout.Kind = .None,
+    layout_style: Layout.Style = .{} 
 };
 
 // The vtable.
 pub const VTable = Sprite.VTable{
+    .getPosition = getPosition,
+    .getSize = getSize,
+
+    .render = render,
+    .update = update,
+
     .deinit = deinit
 };
 
@@ -57,6 +67,8 @@ pub fn init(template: Template, allocator: std.mem.Allocator) Container {
         .y = template.position.y,
         .width = template.size.width,
         .height = template.size.height,
+
+        .layout = Layout.init(template.style.layout, template.style.layout_style),
         .style = template.style
     };
 }
@@ -78,12 +90,12 @@ pub fn getCapacity(self: *Container) usize {
 }
 
 // Set the capacity of the container.
-pub fn setCapacity(self: *Container, capacity: usize) !void {
+pub fn setCapacity(self: *Container, capacity: u16) !void {
     try self.children.ensureTotalCapacityPrecise(capacity);
 }
 
 // Get a child sprite.
-pub fn get(self: *Container, index: usize, comptime T: type) ?*T {
+pub fn get(self: *Container, index: u16, comptime T: type) ?*T {
     if (index < self.children.items.len) {
         return @as(*T, @ptrCast(@alignCast(self.children.items[index].ptr)));
     }
@@ -92,10 +104,10 @@ pub fn get(self: *Container, index: usize, comptime T: type) ?*T {
 }
 
 // Find a child sprite.
-pub fn find(self: *Container, sprite: *anyopaque) ?usize {
+pub fn find(self: *Container, sprite: *anyopaque) ?u16 {
     for (self.children.items, 0..) |children, index| {
         if (children.ptr == sprite) {
-            return index;
+            return @as(u16, @intCast(index));
         }
     }
 
@@ -104,6 +116,10 @@ pub fn find(self: *Container, sprite: *anyopaque) ?usize {
 
 // Initialize a sprite and then add it to the container.
 pub fn add(self: *Container, template: anytype) !*ResolveSpriteType(@TypeOf(template)) {
+    if (self.children.items.len >= std.math.maxInt(u16) - 1) {
+        return error.MaxCapacityExceed;
+    }
+
     var sprite = try Sprite.init(template.init(self.allocator), self.allocator);
     errdefer sprite.deinit();
  
@@ -118,7 +134,7 @@ fn ResolveSpriteType(template: type) type {
 }
 
 // Replace a child sprite.
-pub fn repalce(self: *Container, index: usize, template: anytype) !*ResolveSpriteType(@TypeOf(template)) {
+pub fn repalce(self: *Container, index: u16, template: anytype) !*ResolveSpriteType(@TypeOf(template)) {
     if (index >= self.children.items.len) {
         return error.IndexOutOfBound;
     }
@@ -132,8 +148,59 @@ pub fn repalce(self: *Container, index: usize, template: anytype) !*ResolveSprit
 }
 
 // Remove a child sprite.
-pub fn remove(self: *Container, index: usize) void {
+pub fn remove(self: *Container, index: u16) void {
     if (index < self.children.items.len) {
         self.children.orderedRemove(index).deinit();
     }
+}
+
+// Remove all the chidlren sprites.
+pub fn clear(self: *Container, free: bool) void {
+    for (self.children.items) |*child| {
+        child.deinit();
+    }
+
+    if (free) {
+        self.children.clearAndFree();
+    } else {
+        self.children.clearRetainingCapacity();
+    }
+}
+
+// Get the position of the container.
+pub fn getPosition(ptr: *anyopaque) Layout.Position {
+    const self = @as(*Container, @ptrCast(@alignCast(ptr)));
+
+    return Layout.Position{
+        .x = self.x,
+        .y = self.y
+    };
+}
+
+// Get the size of the container.
+pub fn getSize(ptr: *anyopaque) Layout.Size {
+    const self = @as(*Container, @ptrCast(@alignCast(ptr)));
+
+    return Layout.Size{
+        .width = self.width,
+        .height = self.height
+    };
+}
+
+// Render the container.
+pub fn render(ptr: *anyopaque, _: Layout.Dimension, _: Layout.Dimension) void {
+    _ = @as(*Container, @ptrCast(@alignCast(ptr)));
+
+//    const size = Layout.Size.init(self.width, self.height).resolve(parent.width, parent.height);
+//
+//    var iterator = self.layout.iterate();
+//
+//    for (self.children) |child| {
+//        
+//    }
+}
+
+// Update the container.
+pub fn update(_: *anyopaque) void {
+
 }

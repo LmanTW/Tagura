@@ -31,6 +31,10 @@ pub fn main() !void {
     defer Container.deinit(&container);
 
     _ = try container.add(Container.new(Layout.Position.init(.relative(0), .relative(0)), Layout.Size.init(.fixed(64), .fixed(64)), .{}));
+    _ = try container.add(Container.new(Layout.Position.init(.relative(0), .relative(0)), Layout.Size.init(.fixed(64), .fixed(64)), .{}));
+    _ = try container.add(Container.new(Layout.Position.init(.relative(0), .relative(0)), Layout.Size.init(.fixed(64), .fixed(64)), .{}));
+    _ = try container.add(Container.new(Layout.Position.init(.relative(0), .relative(0)), Layout.Size.init(.fixed(64), .fixed(64)), .{}));
+    _ = try container.add(Container.new(Layout.Position.init(.relative(0), .relative(0)), Layout.Size.init(.fixed(64), .fixed(64)), .{}));
 
     main: while (true) {
         const timestamp = sdl.timer.getMillisecondsSinceInit();
