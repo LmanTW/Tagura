@@ -36,7 +36,7 @@ pub fn init(kind: Kind, style: Style) Layout {
 }
 
 // Calculate the size of the layout.
-pub fn calculateSize(self: *Layout, target_width: u32, target_height: u32, children: []Sprite) Size.Result {
+pub fn calculateSize(self: *Layout, target_width: ?u32, target_height: u32, children: []Sprite) Size.Resolved {
     if (self.updated or (target_width != self.target_width or target_height != self.target_height)) {
         switch (self.kind) {
             .None => {
@@ -45,8 +45,8 @@ pub fn calculateSize(self: *Layout, target_width: u32, target_height: u32, child
             },
 
             .Horizontal => {
-                self.width_result = 0;
-                self.height_result = 0;
+                self.result_width = 0;
+                self.result_height = 0;
 
                 for (children) |child| {
                     const size = child.getSize().resolve(target_width, target_height);
@@ -60,8 +60,8 @@ pub fn calculateSize(self: *Layout, target_width: u32, target_height: u32, child
             },
 
             .Vertical => {
-                self.width_result = 0;
-                self.height_result = 0;
+                self.result_width = 0;
+                self.result_height = 0;
 
                 for (children) |child| {
                     const size = child.getSize().resolve(target_width, target_height);
@@ -75,8 +75,8 @@ pub fn calculateSize(self: *Layout, target_width: u32, target_height: u32, child
             },
 
             .HorizontalWrap => {
-                self.width_result = 0;
-                self.height_result = 0;
+                self.result_width = 0;
+                self.result_height = 0;
 
                 var row_width = @as(u32, 0);
                 var row_height = @as(u32, 0);
@@ -108,8 +108,8 @@ pub fn calculateSize(self: *Layout, target_width: u32, target_height: u32, child
             },
 
             .VerticalWrap => {
-                self.width_result = 0;
-                self.height_result = 0;
+                self.result_width = 0;
+                self.result_height = 0;
 
                 var row_width = @as(u32, 0);
                 var row_height = @as(u32, 0);
@@ -147,14 +147,15 @@ pub fn calculateSize(self: *Layout, target_width: u32, target_height: u32, child
     }
 
     return Size.Result{
-        .width = self.width_result,
-        .height = self.height_result
+        .width = self.result_width,
+        .height = self.result_height
     };
 }
 
 // Iterate through the layout.
 pub fn iterate(self: *Layout, target_width: u32, target_height: u32, children: []Sprite) Iterator {
-    self.setSize(target_width, target_height);
+    self.target_width = target_width;
+    self.target_height = target_height;
 
     return Iterator.init(self, target_width, target_height, children);
 }
@@ -171,8 +172,8 @@ pub const Iterator = struct {
 
     target_width: u32,
     target_height: u32,
-    current_x: i32 = 0,
-    current_y: i32 = 0,
+    current_x: i33 = 0,
+    current_y: i33 = 0,
 
     index: u16 = 0,
 
@@ -188,26 +189,39 @@ pub const Iterator = struct {
     }
 
     // Progress the iterator.
-    pub fn next(self: *Iterator) ?Position.Resolved {
+    pub fn next(self: *Iterator) ?Iterator.Frame {
         if (self.index >= self.children.len) {
             return null;
         }
 
-        const position = Position.Resolved{
+        const child = &self.children[self.index];
+        const size = child.getSize().resolve(self.target_width, self.target_height);
+
+        const result_position = Position.Resolved{
             .x = self.current_x,
             .y = self.current_y
         };
-
-        const child = self.children[self.index];
-        const size = child.getSize().resolve(self.target_width, self.target_height);
+ 
+        var result_size = @as(Size.Resolved, undefined);
 
         switch (self.layout.kind) {
+            .None => {
+                result_size = Size.Resolved{
+                    .width = size.width,
+                    .height = size.height
+                };
+            },
+
             .Horizontal => {
                 self.current_x += size.width + self.layout.style.horizontal_gap;
+                result_size.width = size.width;
+                result_size.height = size.height;
             },
 
             .Vertical => {
                 self.current_y += size.height + self.layout.style.vertical_gap;
+                result_size.width = size.width;
+                result_size.height = size.height;
             },
 
             .HorizontalWrap => {
@@ -217,14 +231,23 @@ pub const Iterator = struct {
             .VerticalWrap => {
 
             },
-
-            else => {}
         }
 
         self.index += 1;
 
-        return position;
+        return Iterator.Frame{
+            .sprite = child,
+            .position = result_position,
+            .size = result_size
+        };
     }
+
+    // A frame.
+    pub const Frame = struct {
+        sprite: *Sprite,
+        position: Position.Resolved,
+        size: Size.Resolved
+    };
 };
 
 // The position.
@@ -241,11 +264,11 @@ pub const Position = struct {
     }
 
     // Resolve the position.
-    pub fn resolve(self: Position, global: Layout.Dimension, parent: Layout.Dimension, _: Alignment, _: Alignment) Position.Resolved {
-        var x = @as(i32, undefined);
-        var y = @as(i32, undefined);
+    pub fn resolve(self: Position, global: Layout.Dimension, parent: Layout.Dimension, size: Size.Resolved, anchor: Alignment, origin: Alignment) Position.Resolved {
+        var x = @as(i33, undefined);
+        var y = @as(i33, undefined);
         var width = @as(u32, undefined);
-        var height = @as(i32, undefined);
+        var height = @as(u32, undefined);
 
         switch (self.x) {
             .Relative => {
@@ -271,6 +294,86 @@ pub const Position = struct {
             }
         }
 
+        switch (anchor) {
+            .TopCenter => {
+                x += @divFloor(width, 2);
+            },
+
+            .TopRight => {
+                x += width;
+            },
+
+            .Left => {
+                y += @divFloor(height, 2);
+            },
+
+            .Center => {
+                x += @divFloor(width, 2);
+                y += @divFloor(height, 2);
+            },
+
+            .Right => {
+                x += width;
+                y += @divFloor(height, 2);
+            },
+
+            .BottomLeft => {
+                y += height;
+            },
+
+            .BottomCenter => {
+                x += @divFloor(width, 2);
+                y += height;
+            },
+
+            .BottomRight => {
+                x += width;
+                y += height;
+            },
+
+            else => {}
+        }
+
+        switch (origin) {
+            .TopCenter => {
+                x -= @divFloor(size.width, 2);
+            },
+
+            .TopRight => {
+                x -= size.width;
+            },
+
+            .Left => {
+                y -= @divFloor(size.height, 2);
+            },
+
+            .Center => {
+                x -= @divFloor(size.width, 2);
+                y -= @divFloor(size.height, 2);
+            },
+
+            .Right => {
+                x -= size.height;
+                y -= @divFloor(size.height, 2);
+            },
+
+            .BottomLeft => {
+                y -= size.height;
+            },
+            
+            .BottomCenter => {
+                x -= @divFloor(size.width, 2);
+                y -= size.height;
+            },
+
+            .BottomRight => {
+                x -= size.width;
+                y -= size.height;
+            },
+
+            else => {}
+        }
+
         return Position.Resolved{
             .x = x,
             .y = y
@@ -279,23 +382,23 @@ pub const Position = struct {
 
     // The resolved position.
     pub const Resolved = struct {
-        x: i32,
-        y: i32
+        x: i33,
+        y: i33
     };
 };
 
 // The coordinate.
-pub const Coordinate = union {
-    Relative: i32,
-    Absolute: i32,
+pub const Coordinate = union(enum) {
+    Relative: i33,
+    Absolute: i33,
 
     // Create a relative position.
-    pub fn relative(value: i32) Coordinate {
+    pub fn relative(value: i33) Coordinate {
         return Coordinate{ .Relative = value };
     }
 
     // Create a absolute position.
-    pub fn absolute(value: i32) Coordinate {
+    pub fn absolute(value: i33) Coordinate {
         return Coordinate{ .Absolute = value };
     }
 };
@@ -314,27 +417,21 @@ pub const Size = struct {
     }
 
     // Resovle the size.
-    pub fn resolve(self: Size, parent_width: u32, parent_height: u32) Size.Result {
-        return Size.Result{
+    pub fn resolve(self: Size, parent_width: u32, parent_height: u32) Size.Resolved {
+        return Size.Resolved{
             .width = switch (self.width) {
                 .Fixed => |value| value,
                 .Relative => |value| @as(u32, @intFromFloat(@as(f32, @floatFromInt(parent_width)) * value)),
-                .Unknown => null
+                .Unknown => 0
             },
 
             .height = switch (self.height) {
                 .Fixed => |value| value,
                 .Relative => |value| @as(u32, @intFromFloat(@as(f32, @floatFromInt(parent_height)) * value)),
-                .Unknown => null
+                .Unknown => 0
             },
         };
     }
-
-    // The result size.
-    pub const Result = struct {
-        width: ?u32,
-        height: ?u32,
-    };
 
     // The resolved size.
     pub const Resolved = struct {
@@ -344,7 +441,7 @@ pub const Size = struct {
 };
 
 // The measurement.
-pub const Measurement = union {
+pub const Measurement = union(enum) {
     Fixed: u32,
     Relative: f32,
     Unknown: void,
@@ -367,8 +464,8 @@ pub const Measurement = union {
 
 // The dimension.
 pub const Dimension = struct {
-    x: i32,
-    y: i32,
+    x: i33,
+    y: i33,
     width: u32,
     height: u32
 };

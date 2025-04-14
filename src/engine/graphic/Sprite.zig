@@ -58,3 +58,17 @@ pub fn getPosition(self: *Sprite) Layout.Position {
 pub fn getSize(self: *Sprite) Layout.Size {
     return self.vtable.getSize(self.ptr);
 }
+
+// Render the sprite.
+pub fn render(self: *Sprite, global: Layout.Dimension, parent: Layout.Dimension) void {
+    if (self.vtable.render) |hook| {
+        hook(self.ptr, global, parent);
+    }
+}
+
+// Update the sprite.
+pub fn update(self: *Sprite) void {
+    if (self.vtable.update) |hook| {
+        hook(self.ptr);
+    }
+}

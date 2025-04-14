@@ -188,19 +188,25 @@ pub fn getSize(ptr: *anyopaque) Layout.Size {
 }
 
 // Render the container.
-pub fn render(ptr: *anyopaque, _: Layout.Dimension, _: Layout.Dimension) void {
-    _ = @as(*Container, @ptrCast(@alignCast(ptr)));
+pub fn render(ptr: *anyopaque, global: Layout.Dimension, parent: Layout.Dimension) void {
+    const self = @as(*Container, @ptrCast(@alignCast(ptr)));
 
-//    const size = Layout.Size.init(self.width, self.height).resolve(parent.width, parent.height);
-//
-//    var iterator = self.layout.iterate();
-//
-//    for (self.children) |child| {
-//        
-//    }
+    const container_size = Layout.Size.init(self.width, self.height).resolve(parent.width, parent.height);
+    const container_position = Layout.Position.init(self.x, self.y).resolve(global, parent, container_size, self.style.anchor, self.style.origin);
+
+    var iterator = self.layout.iterate(container_size.width, container_size.height, self.children.items);
+
+    while (iterator.next()) |frame| {
+        frame.sprite.render(global, Layout.Dimension{
+            .x = container_position.x + frame.position.x,
+            .y = container_position.y + frame.position.y,
+            .width = frame.size.width,
+            .height = frame.size.height
+        });
+    }
 }
 
 // Update the container.
 pub fn update(_: *anyopaque) void {
-
+    
 }
